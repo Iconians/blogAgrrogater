@@ -34,7 +34,6 @@ func Read() (Config, error) {
 	if err := decoder.Decode(&cfg); err != nil {
 		return cfg, err
 	}
-
 	return cfg, nil
 }
 
@@ -71,6 +70,5 @@ func write(cfg Config) error {
 	if err := encoder.Encode(cfg); err != nil {
 		return err
 	}
-
 	return nil
 }
