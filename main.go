@@ -29,6 +29,19 @@ type commands struct {
 	handlers map[string]func(*state, command) error
 }
 
+func handlerReset(s *state, cmd command) error {
+	fmt.Println("Resetting the database...")
+
+	err := s.db.DeleteAllUsers(context.Background())
+	if err != nil {
+		fmt.Println("Failed to reset database:", err)
+		return err
+	}
+
+	fmt.Println("Database reset successfully.")
+	return nil
+}
+
 // register a handler
 func (c *commands) register(name string, f func(*state, command) error) {
 	c.handlers[name] = f
@@ -143,6 +156,7 @@ func main() {
 	cmds := &commands{handlers: make(map[string]func(*state, command) error)}
 	cmds.register("login", handlerLogin)
 	cmds.register("register", handlerRegister) // <-- add this line too
+	cmds.register("reset", handlerReset)
 
 	// parse CLI args
 	if len(os.Args) < 2 {
