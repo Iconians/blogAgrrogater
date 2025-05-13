@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gatorapp/internal/config"
 	"gatorapp/internal/database"
+	"gatorapp/internal/rss"
 	"log"
 	"os"
 	"time"
@@ -128,6 +129,35 @@ func handlerRegister(s *state, cmd command) error {
 	return nil
 }
 
+func handlerUsers(s *state, cmd command) error {
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return fmt.Errorf("failed to get users: %w", err)
+	}
+
+	currentUser := s.cfg.CurrentUserName
+
+	for _, u := range users {
+		if u.Name == currentUser {
+			fmt.Printf("* %s (current)\n", u.Name)
+		} else {
+			fmt.Printf("* %s\n", u.Name)
+		}
+	}
+
+	return nil
+}
+
+func handlerAgg(s *state, cmd command) error {
+	ctx := context.Background()
+	feed, err := rss.FetchFeed(ctx, "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return fmt.Errorf("error fetching feed: %v", err)
+	}
+	fmt.Printf("%+v\n", feed)
+	return nil
+}
+
 func main() {
 
 	cfg, err := config.Read()
@@ -157,6 +187,8 @@ func main() {
 	cmds.register("login", handlerLogin)
 	cmds.register("register", handlerRegister) // <-- add this line too
 	cmds.register("reset", handlerReset)
+	cmds.register("users", handlerUsers)
+	cmds.register("agg", handlerAgg)
 
 	// parse CLI args
 	if len(os.Args) < 2 {
@@ -173,6 +205,11 @@ func main() {
 		fmt.Printf("error: %v\n", err)
 		os.Exit(1)
 	}
+
+	if len(os.Args) < 2 {
+		log.Fatal("Usage: go run main.go agg")
+	}
+
 	// read config
 	// cfg, err := config.Read()
 	// if err != nil {
